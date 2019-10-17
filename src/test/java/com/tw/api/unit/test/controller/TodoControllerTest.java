@@ -1,22 +1,25 @@
 package com.tw.api.unit.test.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tw.api.unit.test.domain.todo.Todo;
 import com.tw.api.unit.test.domain.todo.TodoRepository;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static java.util.Collections.singletonList;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -57,11 +60,33 @@ public class TodoControllerTest {
 
         resultActions.andExpect(status().isOk())
                 .andDo(print())
-                .andExpect(jsonPath("$", instanceOf(Todo.class)))
                 .andExpect(jsonPath("$.id", is(123)))
                 .andExpect(jsonPath("$.title", is("Title")))
                 .andExpect(jsonPath("$.completed", is(false)))
                 .andExpect(jsonPath("$.order", is(1)));
     }
 
+    @Test
+    void test_post_single_toDo() throws Exception {
+        Todo todo = new Todo(123, "Titler", false, 1);
+        when(todoRepository.getAll()).thenReturn(singletonList(todo));
+
+        ResultActions resultActions = mvc.perform(post("/todos")
+                                                    .content(asJsonString(todo))
+                                                    .contentType(MediaType.APPLICATION_JSON));
+
+        resultActions.andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(2)))
+                .andExpect(jsonPath("$.title", is("Titler")))
+                .andExpect(jsonPath("$.completed", is(false)))
+                .andExpect(jsonPath("$.order", is(1)));
+    }
+
+    private String asJsonString(final Object obj) {
+        try {
+            return new ObjectMapper().writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
