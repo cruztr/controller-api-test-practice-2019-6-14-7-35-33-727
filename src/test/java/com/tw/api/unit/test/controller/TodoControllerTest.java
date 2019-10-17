@@ -18,8 +18,7 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -81,6 +80,28 @@ public class TodoControllerTest {
                 .andExpect(jsonPath("$.completed", is(false)))
                 .andExpect(jsonPath("$.order", is(1)));
     }
+
+    @Test
+    void test_delete_single_toDo() throws Exception {
+        Todo todo = new Todo(123, "Titler", false, 1);
+        when(todoRepository.findById(123L)).thenReturn(java.util.Optional.of(todo));
+
+        ResultActions resultActions = mvc.perform(delete("/todos/123"));
+
+        resultActions.andExpect(status().isOk());
+    }
+
+    @Test
+    void test_delete_single_toDo_when_not_find_not_existing() throws Exception {
+        Todo todo = new Todo(123, "Titler", false, 1);
+        when(todoRepository.findById(123L)).thenReturn(java.util.Optional.of(todo));
+
+        ResultActions resultActions = mvc.perform(delete("/todos/1"));
+
+        resultActions.andExpect(status().isNotFound());
+    }
+
+    
 
     private String asJsonString(final Object obj) {
         try {
